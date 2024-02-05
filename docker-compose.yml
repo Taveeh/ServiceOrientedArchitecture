@@ -1,0 +1,28 @@
+version: "3"
+services:
+  authentication-api:
+    env_file: auth/config/development.env
+    container_name: lab-server-api
+    build:
+      context: auth
+    ports:
+      - "3001:3001"
+    command: yarn start:dev
+    networks:
+      - bridge-network
+
+  lab-soa-db:
+    container_name: lab-soa-postgres
+    image: postgres:13-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: soa_db
+    networks:
+      - bridge-network
+networks:
+  bridge-network:
+    driver: bridge

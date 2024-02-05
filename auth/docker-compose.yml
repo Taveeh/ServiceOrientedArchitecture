@@ -1,0 +1,38 @@
+version: '3.7'
+
+services:
+  lab-soa-db:
+    container_name: lab-soa-postgres
+    image: postgres:13-alpine
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: soa_db
+    networks:
+      - node-bridge-network
+  lab-server-api:
+    env_file: .env
+    container_name: lab-server-api
+    build:
+      context: .
+    volumes:
+    - .:/usr/src/app
+    - /usr/src/app/node_modules
+    - /usr/src/app/dist
+    ports:
+    - 3001:3001
+    command: yarn start:dev
+    networks:
+    - socket-network
+    - node-bridge-network
+
+
+networks:
+  socket-network:
+  node-bridge-network:
+    driver: bridge
+volumes:
+  socket-pgdata:
