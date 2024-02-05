@@ -1,6 +1,8 @@
-version: "3"
+version: "3.7"
 services:
   authentication-api:
+    depends_on:
+      - lab-soa-db
     env_file: auth/config/development.env
     container_name: lab-server-api
     build:
@@ -12,7 +14,7 @@ services:
       - bridge-network
 
   lab-soa-db:
-    container_name: lab-soa-postgres
+    container_name: lab-soa-db
     image: postgres:13-alpine
     restart: always
     ports:

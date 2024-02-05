@@ -24,12 +24,6 @@ async function bootstrap() {
   app.use(json({ limit: '30mb' }));
   app.use(urlencoded({ extended: true, limit: '30mb' }));
 
-  app.enableVersioning({
-    type: VersioningType.URI,
-    // with this we don't have to specify for each controller the version
-    defaultVersion: '1',
-  });
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

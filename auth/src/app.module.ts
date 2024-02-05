@@ -17,8 +17,7 @@ const ENTITIES = [ User];
   imports: [
     ConfigModule.forRoot({
       envFilePath: [
-        // `config/${process.env.NODE_ENV || 'development'}.env`,
-        '.env',
+        'config/development.env',
       ],
       load: [configuration],
       isGlobal: true,
