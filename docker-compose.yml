@@ -1,5 +1,52 @@
 version: "3.7"
 services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:6.2.0
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "22181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - bridge-network
+  kafka:
+    image: confluentinc/cp-kafka:6.2.0
+    hostname: broker
+    container_name: broker
+    depends_on:
+      - zookeeper
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+      - "9101:9101"
+      - "9093:9093"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+    networks:
+      - bridge-network
+  kafdrop:
+    image: obsidiandynamics/kafdrop
+    restart: "no"
+    ports:
+      - "9007:9000"
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:29092"
+      JVM_OPTS: "-Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify"
+    depends_on:
+      - "kafka"
+    networks:
+      - bridge-network
   authentication-api:
     depends_on:
       - lab-soa-db
@@ -12,6 +59,48 @@ services:
     command: yarn start:dev
     networks:
       - bridge-network
+
+  tv-shows-api:
+    depends_on:
+      - lab-soa-db
+      - kafka
+    env_file:
+      - tv-shows/config/development.env
+    container_name: tv-shows-api
+    build:
+      context: tv-shows
+    ports:
+      - "3002:3002"
+    command: yarn start:dev
+    networks:
+      - bridge-network
+
+  api-gateway:
+    depends_on:
+      - tv-shows-api
+      - authentication-api
+    env_file:
+      - gateway-api/config/development.env
+    container_name: gateway-api
+    build:
+      context: gateway-api
+    ports:
+      - '8081:8081'
+    command: yarn start:dev
+    networks:
+      - bridge-network
+#  rating-service:
+#    depends_on:
+#      - tv-shows-api
+#      - kafka
+#    container_name: rating-service
+#    build:
+#      context: rating-service
+#    ports:
+#      - "3003:3003"
+#    command: yarn start:dev
+#    networks:
+#      - bridge-network
 
   lab-soa-db:
     container_name: lab-soa-db
